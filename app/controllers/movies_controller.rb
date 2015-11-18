@@ -11,7 +11,23 @@ class MoviesController < ApplicationController
   end
 
   def index
-    @movies = Movie.all
+    #@movies = Movie.all
+    #session[:ratings] = {}
+    redirect = false
+    @sort_by = params[:sort_by]? params[:sort_by] : session[:sort_by]
+    @ratings = params[:ratings]? params[:ratings] : session[:ratings]
+    redirect=((params[:sort_by]!=@sort_by) || (params[:ratings]!=@ratings))
+    @all_ratings = Movie.pluck(:rating).uniq
+    if @ratings.nil?
+      @ratings={}
+      @all_ratings.each { |i| @ratings[i] = "on" }
+    end
+    if redirect 
+      redirect_to movies_path(:sort_by=>@sort_by, :ratings=>@ratings)
+    end
+    @movies = Movie.where({rating: @ratings.keys}).order(@sort_by ? @sort_by : :id)
+    session[:sort_by] = @sort_by
+    session[:ratings] = @ratings
   end
 
   def new
